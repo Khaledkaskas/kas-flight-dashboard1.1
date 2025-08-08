@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>بطاقة تأخير الرحلات</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f4f4;
+      --font-size: 14px;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .controls button, .controls select, .controls input {
+      padding: 6px 10px;
+      font-size: 14px;
+    }
+    #searchInput {
+      flex: 1;
+      padding: 6px;
+      font-size: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      background: white;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    thead tr:nth-child(2) th {
+      background-color: #333;
+      color: white;
+      padding: 8px;
+      font-size: 16px;
+    }
+    tbody td {
+      padding: 8px;
+      border-bottom: 1px solid #ccc;
+      font-size: var(--font-size);
+      text-align: center;
+    }
+    img.logo {
+      max-height: 25px;
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1D1D1F;
+      color: #A6A6A6;
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 1000;
+      width: 320px;
+      box-shadow: 0 0 15px #000;
+    }
+    .popup h3 {
+      color: white;
+      margin-top: 0;
+    }
+    .popup strong {
+      color: white;
+    }
+    .popup img {
+      max-height: 30px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- أدوات التحكم -->
+  <div class="controls">
+    <button onclick="changeFontSize(1)">🔍 تكبير الخط</button>
+    <button onclick="changeFontSize(-1)">🔎 تصغير الخط</button>
+    <button onclick="selectAll()">✅ تحديد الكل</button>
+    <button onclick="sendReport()">📤 إرسال التقرير</button>
+    <input type="date" id="reportDate">
+    <input type="time" id="fromTime" step="900">
+    <input type="time" id="toTime" step="900">
+    <select id="airlineSelect">
+      <option>Flyadeal</option>
+      <option>Saudia</option>
+      <option>Riyadh Air</option>
+    </select>
+    <input type="text" id="searchInput" placeholder="🔎 بحث عن الرحلة..." onkeyup="filterTable()">
+  </div>
+
+  <!-- جدول الرحلات -->
+  <table id="flightTable">
+    <thead>
+      <tr><th colspan="8"></th></tr> <!-- صف فارغ -->
+      <tr>
+        <th>📅 التاريخ</th>
+        <th>✈️ رقم الرحلة</th>
+        <th>📍 الوجهة</th>
+        <th>🚪 البوابة</th>
+        <th>⏱️ وقت الصعود</th>
+        <th>🖼️ الشعار</th>
+        <th>📊 النسبة %</th>
+        <th>🗎 تفاصيل</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>08-08-2025</td>
+        <td>F288</td>
+        <td>QJB</td>
+        <td>36 (GF)</td>
+        <td>15 دقيقة</td>
+        <td><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flyadeal_logo.svg/2560px-Flyadeal_logo.svg.png" class="logo"></td>
+        <td>100%</td>
+        <td><button onclick="showDetails('F288', '08-08-2025', 'QJB', '36 (GF)', '15 دقيقة', '100%', 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flyadeal_logo.svg/2560px-Flyadeal_logo.svg.png')">🗎</button></td>
+      </tr>
+      <tr>
+        <td>08-08-2025</td>
+        <td>F3117</td>
+        <td>BAH</td>
+        <td>46 (TC)</td>
+        <td>05 دقيقة</td>
+        <td><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flyadeal_logo.svg/2560px-Flyadeal_logo.svg.png" class="logo"></td>
+        <td>33%</td>
+        <td><button onclick="showDetails('F3117', '08-08-2025', 'BAH', '46 (TC)', '05 دقيقة', '33%', 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flyadeal_logo.svg/2560px-Flyadeal_logo.svg.png')">🗎</button></td>
+      </tr>
+      <tr>
+        <td>08-08-2025</td>
+        <td>F3118</td>
+        <td>BAH</td>
+        <td>46 (TC)</td>
+        <td>05 دقيقة</td>
+        <td><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flyadeal_logo.svg/2560px-Flyadeal_logo.svg.png" class="logo"></td>
+        <td>33%</td>
+        <td><button onclick="showDetails('F3118', '08-08-2025', 'BAH', '46 (TC)', '05 دقيقة', '33%', 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flyadeal_logo.svg/2560px-Flyadeal_logo.svg.png')">🗎</button></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- نافذة التفاصيل -->
+  <div id="popup" class="popup">
+    <h3>تفاصيل الرحلة</h3>
+    <div id="popupContent"></div>
+    <button onclick="closePopup()">❌ إغلاق</button>
+  </div>
+
+  <script>
+    function changeFontSize(delta) {
+      let current = parseInt(getComputedStyle(document.body).getPropertyValue('--font-size'));
+      document.body.style.setProperty('--font-size', `${current + delta}px`);
+    }
+    function selectAll() {
+      alert("تم تحديد جميع الرحلات.");
+    }
+    function sendReport() {
+      alert("تم إرسال التقرير.");
+    }
+    function showDetails(flight, date, destination, gate, boarding, percent, logo) {
+      const content = `
+        <p><strong>رقم الرحلة:</strong> ${flight}</p>
+        <p><strong>التاريخ:</strong> ${date}</p>
+        <p><strong>الوجهة:</strong> ${destination}</p>
+        <p><strong>البوابة:</strong> ${gate}</p>
+        <p><strong>وقت الصعود:</strong> ${boarding}</p>
+        <p><strong>النسبة:</strong> ${percent}</p>
+        <img src="${logo}">
+      `;
+      document.getElementById("popupContent").innerHTML = content;
+      document.getElementById("popup").style.display = "block";
+    }
+    function closePopup() {
+      document.getElementById("popup").style.display = "none";
+    }
+    function filterTable() {
+      const input = document.getElementById("searchInput").value.toLowerCase();
+      const rows = document.querySelectorAll("#flightTable tbody tr");
+      rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+      });
+    }
+  </script>
+
+</body>
+</html>
